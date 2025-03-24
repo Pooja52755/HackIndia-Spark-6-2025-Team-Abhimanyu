@@ -1,0 +1,14 @@
+# Core Requirements
+flask==3.0.2
+python-dotenv==1.0.1
+
+# MeTTa/Hyperon
+hyperon==0.2.2
+
+# Google Gemini
+google-generativeai==0.3.2
+langchain-google-genai==0.0.14
+
+# LangChain
+langchain-core==0.1.0
+langchain==0.1.0

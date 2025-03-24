@@ -37,7 +37,8 @@ A context-aware chatbot that combines structured knowledge representation in MeT
 4. Set up environment variables:
   ```bash
      echo "GEMINI_API_KEY=your_api_key_here" > .env
-     ```
+  ```
+  
 ### Project Structure
 ```
 faqchatBot-with-metta-chatbot/
