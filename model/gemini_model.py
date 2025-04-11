@@ -1,34 +1,36 @@
-
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 import os
+import google.generativeai as genai
 
 class GeminiChain:
     def __init__(self, metta_kb):
+        # Get the API key
+        api_key = os.getenv("GEMINI_API_KEY")
+        if not api_key:
+            raise ValueError("GEMINI_API_KEY environment variable is not set")
+
         # Configure with correct model name and endpoint
         self.llm = ChatGoogleGenerativeAI(
-            model="gemini-1.5-pro",  #  model name
-            google_api_key=os.getenv("GEMINI_API_KEY"),
+            model="gemini-1.5-pro",  # model name
+            google_api_key=api_key,  # Explicitly pass the API key here
             temperature=0.3,
-           convert_system_message_to_human=True,
+            convert_system_message_to_human=True,
         )
         self.metta_kb = metta_kb
         self.chain = self._create_chain()
 
     def _create_chain(self):
-        print("here 3")
-        google_api_key=os.getenv("GEMINI_API_KEY")
-        print(google_api_key)
         prompt = ChatPromptTemplate.from_template(
             """Answer the question based only on the following context:
             {context}
             
             Question: {question}
             
-            Provide a helpful response using both the context and your general knowledge.
-            If mentioning sensitive attributes, maintain respectful language."""
+            Provide a helpful response about cybersecurity using both the context and your general knowledge.
+            Focus on explaining cybersecurity concepts clearly and accurately."""
         )
 
         return (
@@ -38,46 +40,48 @@ class GeminiChain:
             | StrOutputParser()
         )
 
-
     def _get_metta_context(self, _):
-        """Build comprehensive context from MeTTa KB"""
+        """Build comprehensive context from Cybersecurity MeTTa KB"""
         context = {
-            'total_humans': len(self.metta_kb.get_humans()),
-            'men': self.metta_kb.get_men(),
-            'women': self.metta_kb.get_women(),
-            'soda_drinkers': self.metta_kb.get_soda_drinkers(),
-            'ugly_individuals': self.metta_kb.get_ugly(),
-            'ugly_men': self.metta_kb.get_ugly_men(),
-            'ugly_women': self.metta_kb.get_ugly_women(),
-            'male_soda_drinkers': self.metta_kb.get_male_soda_drinkers(),
-            'female_soda_drinkers': self.metta_kb.get_female_soda_drinkers()
+            'threat_entities': self.metta_kb.getthreatentities(),
+            'defense_technologies': self.metta_kb.getdefensetechnologies(),
+            'attack_vectors': self.metta_kb.getattackvectors(),
+            'data_theft_threats': self.metta_kb.getdatatheftthreats(),
+            'network_security_tools': self.metta_kb.getnetworksecuritytools(),
+            'endpoint_security_tools': self.metta_kb.getendpointsecuritytools(),
+            'security_monitoring_tools': self.metta_kb.getsecuritymonitoringtools(),
+            'all_mitigations': self.metta_kb.getallmitigations(),
+            'threat_detection_tools': self.metta_kb.getthreatdetectiontools(),
+            'attack_vector_defenses': self.metta_kb.getdefensesforattackvector()
         }
         return self._build_prompt(context)
 
     def _build_prompt(self, context):
         """Format the context into the structured prompt"""
         return f"""
-        KNOWLEDGE BASE CONTEXT:
-        - Total Humans: {context['total_humans']}
-        - Men: {', '.join(context['men'])}
-        - Women: {', '.join(context['women'])}
-        - Soda Drinkers: {', '.join(context['soda_drinkers'])}
-        - Ugly Individuals: {', '.join(context['ugly_individuals'])}
-        - Ugly Men: {', '.join(context['ugly_men'])}
-        - Ugly Women: {', '.join(context['ugly_women'])}
-        - Male Soda Drinkers: {', '.join(context['male_soda_drinkers'])}
-        - Female Soda Drinkers: {', '.join(context['female_soda_drinkers'])}
+        CYBERSECURITY KNOWLEDGE BASE CONTEXT:
+        - Threat Entities: {', '.join(context['threat_entities'])}
+        - Defense Technologies: {', '.join(context['defense_technologies'])}
+        - Attack Vectors: {', '.join(context['attack_vectors'])}
+        - Data Theft Threats: {', '.join(context['data_theft_threats'])}
+        - Network Security Tools: {', '.join(context['network_security_tools'])}
+        - Endpoint Security Tools: {', '.join(context['endpoint_security_tools'])}
+        - Security Monitoring Tools: {', '.join(context['security_monitoring_tools'])}
+        
+        RELATIONSHIPS:
+        - Threat Mitigations: {', '.join(context['all_mitigations'])}
+        - Threat Detection: {', '.join(context['threat_detection_tools'])}
+        - Attack Vector Defenses: {', '.join(context['attack_vector_defenses'])}
 
         INSTRUCTIONS:
-        1. Be factual and use the context above
-        2. Maintain neutral language about appearances
-        3. Highlight demographic patterns when relevant
-        4. If asked about sensitive attributes, respond respectfully
-        5. For count questions, use the exact numbers from context
+        1. Be factual and use the cybersecurity context above
+        2. Explain cybersecurity concepts clearly
+        3. When discussing threats, also mention applicable defenses
+        4. When discussing attack vectors, explain how they can be mitigated
+        5. For technical questions, provide accurate and practical explanations
         """
 
     def generate_response(self, question):
-        print("here2")
         try:
             return self.chain.invoke(question)
         except Exception as e:

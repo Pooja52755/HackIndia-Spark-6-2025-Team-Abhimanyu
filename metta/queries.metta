@@ -1,27 +1,32 @@
 ; Base queries
-(= (getHumans) (match &self (Inheritance $name human) $name))
-(= (getMen ) (match &self (Inheritance  man) $name))
-(= (getWomen ) (match &self (Inheritance $name woman) $name))
-(= (getUgly ) (match &self (Inheritance $name ugly) $name))
-(= (getSodaDrinkers) (match &self (Inheritance $name sodaDrinker) $name))
+(= (getThreatEntities) (match &self (Inheritance $name ThreatEntity) $name))
+(= (getDefenseTechnologies) (match &self (Inheritance $name DefenseTechnology) $name))
+(= (getAttackVectors) (match &self (Inheritance $name AttackVector) $name))
+(= (getDataTheftThreats) (match &self (Inheritance $name DataTheft) $name))
+(= (getNetworkSecurityTools) (match &self (Inheritance $name NetworkSecurity) $name))
+(= (getEndpointSecurityTools) (match &self (Inheritance $name EndpointSecurity) $name))
+(= (getSecurityMonitoringTools) (match &self (Inheritance $name SecurityMonitoring) $name))
 
-; Combined queries
-(= (getUglyMen )
+; Relationship queries
+(= (getThreatMitigations $threat)
+   (match &self (MitigatedBy $threat $defense) $defense))
+
+(= (getAllMitigations)
+   (match &self (MitigatedBy $threat $defense) 
+          (, $threat $defense)))
+
+(= (getDefensesForAttackVector)
    (match &self 
-    (, (Inheritance $name man)
-             (Inheritance $name ugly)) $name))
+    (, (Inheritance $attack AttackVector)
+       (MitigatedBy $attack $defense)) 
+    (, $attack $defense)))
 
-(= (getUglyWomen)
-   (match &self
-   (, (Inheritance $name woman)
-         (Inheritance $name ugly)) $name))
+(= (getThreatDetectionTools)
+   (match &self (DetectedBy $threat $tool) 
+          (, $threat $tool)))
 
-(= (getSodaDrinkingMen)
-   (match &self
-    (, (Inheritance $name man)
-          (Inheritance $name sodaDrinker) ) $name))
+(= (getToolsBySecurityDomain $domain)
+   (match &self (Inheritance $tool $domain) $tool))
 
-(= (getSodaDrinkingWomen)
-   (match &self
-    (, (Inheritance $name woman)
-           (Inheritance $name sodaDrinker)) $name))
+(= (findMitigationsByDefenseTool $tool)
+   (match &self (MitigatedBy $threat $tool) $threat))

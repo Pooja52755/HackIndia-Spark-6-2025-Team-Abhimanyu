@@ -1,73 +1,63 @@
-# from flask import Flask, request, jsonify
-# from model.metta_queries import MettaKnowledgeBase
-# from model.gemini_model import GeminiChat
-# import os
-
-from flask import Flask, request, jsonify
+from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from typing import Optional
 from model.metta_queries import MettaKnowledgeBase
 from model.gemini_model import GeminiChain
 
 from dotenv import load_dotenv
 import os
+import uvicorn
 
-from dotenv import load_dotenv
-load_dotenv()  # Add this at the top before other imports
+load_dotenv()  # Load environment variables
 
-app = Flask(__name__)
+app = FastAPI(title="Cybersecurity Knowledge Chatbot API")
 
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, replace with specific origins
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
+# Initialize the knowledge base and chat chain
 try:
     knowledge_base = MettaKnowledgeBase()
     chat_chain = GeminiChain(knowledge_base)
 except Exception as e:
     raise RuntimeError(f"Initialization failed: {str(e)}")
 
-@app.route("/chat",methods=["GET"])
-def root():
-    return {"message":"Hello"}
+# Define request model
+class ChatRequest(BaseModel):
+    message: str
 
-@app.route("/chat", methods=["POST"])
-def chat_handler():
+# Define response model
+class ChatResponse(BaseModel):
+    response: str
+
+@app.get("/chat")
+def root():
+    return {"message": "Hello"}
+
+@app.post("/chat", response_model=ChatResponse)
+async def chat_handler(request: ChatRequest):
     try:
-        user_input = request.json.get("message", "")
+        user_input = request.message
         if not user_input.strip():
-            return jsonify({"error": "Empty message"}), 400
+            raise HTTPException(status_code=400, detail="Empty message")
         
         response = chat_chain.generate_response(user_input)
-        return jsonify({"response": response})
+        return ChatResponse(response=response)
     
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8006, debug=os.getenv("FLASK_DEBUG", False))
-
-
-# # Initialize components
-# try:
-#     knowledge_base = MettaKnowledgeBase()
-#     chat_model = GeminiChat()
-# except Exception as e:
-#     raise RuntimeError(f"Initialization failed: {str(e)}")
-
-# @app.route("/chat",methods=["GET"])
-# def root():
-#     return {"message":"Hello"}
-
-
-# @app.route("/chat", methods=["POST"])
-# def chat_handler():
-#     try:
-#         user_input = request.json.get("message", "")
-#         if not user_input.strip():
-#             return jsonify({"error": "Empty message"}), 400
-        
-#         context = knowledge_base.get_context()
-#         response = chat_model.generate_response(context, user_input)
-#         return jsonify({"response": response})
-    
-#     except Exception as e:
-#         return jsonify({"error": str(e)}), 500
-
-# if __name__ == "__main__":
-#     app.run(host="0.0.0.0", port=8001, debug=os.getenv("FLASK_DEBUG", False))
+    uvicorn.run(
+        "app:app", 
+        host="0.0.0.0", 
+        port=8006, 
+        reload=os.getenv("DEBUG", "False").lower() == "true"
+    )
