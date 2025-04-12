@@ -7,33 +7,11 @@
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
-.App-header {
-  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
-  color: white;
-  padding: 1.5rem 2rem;
-  margin-bottom: 2rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.App-header h1 {
-  margin: 0.5rem 0;
-  font-size: 2rem;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-}
-
-.App-header p {
-  opacity: 0.9;
-  margin-top: 0.5rem;
-  font-weight: 300;
-  font-size: 1rem;
-}
-
 main {
   flex: 1;
   display: flex;
   justify-content: center;
-  padding: 0 2rem 3rem;
+  padding: 0 2rem 1rem;
 }
 
 .app-layout {
@@ -43,93 +21,34 @@ main {
   max-width: 1200px;
 }
 
-footer {
+.main-footer {
   margin-top: auto;
-  padding: 2rem 2rem 1rem;
+  padding: 1rem;
   background-color: #1e293b;
   color: white;
-}
-
-.footer-content {
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  max-width: 1200px;
-  margin: 0 auto;
-  gap: 2rem;
-}
-
-.footer-section {
-  flex: 1;
-  min-width: 250px;
-  text-align: left;
-}
-
-.footer-section h3 {
-  color: #e2e8f0;
-  font-size: 1.1rem;
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.footer-section p {
-  color: #cbd5e1;
+  text-align: center;
   font-size: 0.9rem;
-  line-height: 1.6;
 }
 
-.footer-section ul {
-  padding-left: 0;
-  list-style: none;
-}
-
-.footer-section li {
-  margin-bottom: 0.5rem;
-}
-
-.footer-section a {
+.main-footer a {
   color: #93c5fd;
   text-decoration: none;
   transition: color 0.2s;
 }
 
-.footer-section a:hover {
+.main-footer a:hover {
   color: #bfdbfe;
   text-decoration: underline;
 }
 
-.footer-bottom {
-  margin-top: 2rem;
-  padding-top: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  text-align: center;
-  font-size: 0.8rem;
-  color: #94a3b8;
-}
-
 @media (max-width: 768px) {
-  .App-header {
-    padding: 1rem;
-  }
-  
   main {
-    padding: 0 1rem 2rem;
-  }
-  
-  .footer-content {
-    flex-direction: column;
-    gap: 1.5rem;
-  }
-  
-  .footer-section {
-    width: 100%;
+    padding: 0 1rem 1rem;
   }
 }
 
-/* Additional styling for better responsiveness */
 @media (max-width: 480px) {
-  .App-header h1 {
-    font-size: 1.5rem;
+  .main-footer {
+    font-size: 0.8rem;
   }
 }

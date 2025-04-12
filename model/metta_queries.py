@@ -7,7 +7,7 @@ class MettaKnowledgeBase:
         self._load_knowledge()
 
     def _load_knowledge(self):
-        """Load knowledge base entries from kb.metta without using hyperon"""
+        """Load knowledge base entries from cybersec_knowledge.metta without using hyperon"""
         try:
             # Create a simplified knowledge structure for demo purposes
             self.kb_data = {

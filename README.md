@@ -52,11 +52,11 @@ cybersecurity-metta-chatbot/
 │   ├── gemini_model.py    # Gemini LLM integration
 │   └── metta_queries.py   # MeTTa knowledge base handler
 ├── metta/
-│   ├── kb.metta           # Cybersecurity knowledge base
-│   └── queries.metta      # MeTTa queries
+│   ├── cybersec_knowledge.metta  # Cybersecurity knowledge base
+│   └── cybersec_queries.metta    # MeTTa queries
 ├── requirements.txt       # Dependencies
 ├── .env                   # Environment variables (add your Gemini API key here)
-└── README.md 
+└── README.md
 ```
 ## Usage
 1. Start the Flask server:

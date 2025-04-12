@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Any
 from model.metta_queries import MettaKnowledgeBase
 from model.gemini_model import GeminiChain
 
@@ -33,8 +33,23 @@ except Exception as e:
 class ChatRequest(BaseModel):
     message: str
 
+class ElementItem(BaseModel):
+    description: Optional[str] = None
+    url: Optional[str] = None
+    title: Optional[str] = None
+    content: Optional[str] = None
+    text: Optional[str] = None
+    action: Optional[str] = None
+
+class ResponseElements(BaseModel):
+    images: Optional[List[ElementItem]] = []
+    links: Optional[List[ElementItem]] = []
+    accordions: Optional[List[ElementItem]] = []
+    buttons: Optional[List[ElementItem]] = []
+
 class ChatResponse(BaseModel):
     response: str
+    elements: Optional[ResponseElements] = None
 
 class KnowledgeBaseResponse(BaseModel):
     entities: Dict[str, List[str]]
@@ -51,8 +66,17 @@ async def chat_handler(request: ChatRequest):
         if not user_input.strip():
             raise HTTPException(status_code=400, detail="Empty message")
         
-        response = chat_chain.generate_response(user_input)
-        return ChatResponse(response=response)
+        # Get response from chat chain
+        response_data = chat_chain.generate_response(user_input)
+        
+        # Check if response is in the new multi-format structure
+        if isinstance(response_data, dict) and "text" in response_data:
+            text_response = response_data["text"]
+            elements = response_data.get("elements", {})
+            return ChatResponse(response=text_response, elements=ResponseElements(**elements))
+        else:
+            # Handle legacy text-only response
+            return ChatResponse(response=response_data)
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -90,7 +114,7 @@ async def get_knowledge_base():
 
 if __name__ == "__main__":
     uvicorn.run(
-        "api:app", 
+        "app:app", 
         host="0.0.0.0", 
         port=8006, 
         reload=os.getenv("DEBUG", "False").lower() == "true"

@@ -59,6 +59,40 @@ const ChatInterface = () => {
     return text;
   };
   
+  // Handle accordions toggle
+  const toggleAccordion = (messageId, accordionIndex) => {
+    setMessages(prevMessages => {
+      return prevMessages.map(msg => {
+        if (msg.id === messageId && msg.elements?.accordions) {
+          const updatedAccordions = [...msg.elements.accordions];
+          updatedAccordions[accordionIndex] = {
+            ...updatedAccordions[accordionIndex],
+            isOpen: !updatedAccordions[accordionIndex].isOpen
+          };
+          
+          return {
+            ...msg,
+            elements: {
+              ...msg.elements,
+              accordions: updatedAccordions
+            }
+          };
+        }
+        return msg;
+      });
+    });
+  };
+  
+  // Handle button actions
+  const handleButtonClick = (action, text) => {
+    // For now, we'll implement a simple action to insert the button text as a new query
+    if (action === 'query') {
+      setInput(text);
+    } else if (action.startsWith('link:')) {
+      window.open(action.substring(5), '_blank');
+    }
+  };
+  
   // Get current time for message timestamp
   const getFormattedTime = () => {
     const now = new Date();
@@ -69,8 +103,12 @@ const ChatInterface = () => {
     e.preventDefault();
     if (!input.trim()) return;
 
+    // Generate a unique ID for this message
+    const messageId = `msg-${Date.now()}`;
+    
     // Add user message to chat with timestamp
     const userMessage = { 
+      id: `user-${messageId}`,
       text: input, 
       sender: 'user', 
       timestamp: getFormattedTime() 
@@ -85,14 +123,27 @@ const ChatInterface = () => {
       const response = await axios.post('/chat', { message: input });
       
       // Add bot response to chat with timestamp
-      setMessages(prev => [...prev, { 
+      const botResponse = { 
+        id: `bot-${messageId}`,
         text: response.data.response, 
         sender: 'bot',
-        timestamp: getFormattedTime()
-      }]);
+        timestamp: getFormattedTime(),
+        elements: response.data.elements || {}
+      };
+      
+      // Initialize isOpen property for accordions
+      if (botResponse.elements?.accordions) {
+        botResponse.elements.accordions = botResponse.elements.accordions.map(accordion => ({
+          ...accordion,
+          isOpen: false
+        }));
+      }
+      
+      setMessages(prev => [...prev, botResponse]);
     } catch (error) {
       console.error('Error sending message:', error);
       setMessages(prev => [...prev, { 
+        id: `error-${messageId}`,
         text: 'Sorry, there was an error processing your request. Please try again.', 
         sender: 'bot',
         timestamp: getFormattedTime() 
@@ -118,21 +169,102 @@ const ChatInterface = () => {
     }
   };
 
+  // Render message elements (images, links, etc.)
+  const renderMessageElements = (message) => {
+    if (!message.elements) return null;
+    
+    return (
+      <div className="message-elements">
+        {message.elements.images && message.elements.images.length > 0 && (
+          <div className="message-images">
+            {message.elements.images.map((image, index) => (
+              <div key={`img-${index}`} className="message-image">
+                <img 
+                  src={image.url} 
+                  alt={image.description} 
+                  loading="lazy"
+                />
+                {image.description && (
+                  <p className="image-caption">{image.description}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+        
+        {message.elements.links && message.elements.links.length > 0 && (
+          <div className="message-links">
+            <h4 className="links-heading">Useful Resources</h4>
+            <ul className="links-list">
+              {message.elements.links.map((link, index) => (
+                <li key={`link-${index}`}>
+                  <a href={link.url} target="_blank" rel="noopener noreferrer">
+                    {link.title}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        
+        {message.elements.accordions && message.elements.accordions.length > 0 && (
+          <div className="message-accordions">
+            {message.elements.accordions.map((accordion, index) => (
+              <div key={`accordion-${index}`} className="accordion">
+                <div 
+                  className="accordion-header"
+                  onClick={() => toggleAccordion(message.id, index)}
+                >
+                  <span className="accordion-title">{accordion.title}</span>
+                  <span className={`accordion-icon ${accordion.isOpen ? 'open' : ''}`}>
+                    {accordion.isOpen ? '−' : '+'}
+                  </span>
+                </div>
+                {accordion.isOpen && (
+                  <div className="accordion-content">
+                    <div 
+                      dangerouslySetInnerHTML={{ 
+                        __html: formatMessageText(accordion.content) 
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+        
+        {message.elements.buttons && message.elements.buttons.length > 0 && (
+          <div className="message-buttons">
+            {message.elements.buttons.map((button, index) => (
+              <button
+                key={`btn-${index}`}
+                className="interactive-button"
+                onClick={() => handleButtonClick(button.action, button.text)}
+              >
+                {button.text}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="chat-container">
       <div className="chat-header">
-        <h1>Cybersecurity Knowledge Chatbot</h1>
-        <p>Powered by Google Gemini</p>
+        <h1>Cybersecurity Knowledge Assistant</h1>
       </div>
       
       <div className="messages-container">
         {messages.length === 0 ? (
           <div className="welcome-message">
-            <h2>Welcome to the Cybersecurity Knowledge Chatbot!</h2>
-            <p>Ask me anything about cybersecurity threats, defenses, or best practices. I'm here to help you understand the complex world of cybersecurity using structured knowledge and AI.</p>
+            <h2>Welcome to the Cybersecurity Knowledge Assistant</h2>
+            <p>Ask me anything about cybersecurity threats, defenses, or best practices.</p>
             
             <div className="sample-questions-container">
-              <h3>Try asking one of these questions:</h3>
+              <h3>Try asking:</h3>
               <div className="sample-questions">
                 {sampleQuestions.map((question, index) => (
                   <div 
@@ -147,14 +279,17 @@ const ChatInterface = () => {
             </div>
           </div>
         ) : (
-          messages.map((message, index) => (
-            <div key={index} className={`message ${message.sender}`}>
+          messages.map((message) => (
+            <div key={message.id} className={`message ${message.sender}`}>
               <div className="message-content">
                 {message.sender === 'bot' ? (
-                  <div 
-                    className="formatted-message"
-                    dangerouslySetInnerHTML={{ __html: formatMessageText(message.text) }}
-                  />
+                  <>
+                    <div 
+                      className="formatted-message"
+                      dangerouslySetInnerHTML={{ __html: formatMessageText(message.text) }}
+                    />
+                    {renderMessageElements(message)}
+                  </>
                 ) : (
                   <p>{message.text}</p>
                 )}
@@ -193,16 +328,11 @@ const ChatInterface = () => {
           />
         </div>
         <button type="submit" disabled={isLoading || !input.trim()}>
-          Send
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
             <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
           </svg>
         </button>
       </form>
-      
-      <div className="chat-footer">
-        <p>&copy; 2025 Cybersecurity Knowledge Chatbot</p>
-      </div>
     </div>
   );
 };

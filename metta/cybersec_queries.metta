@@ -1,4 +1,3 @@
-
 (= (getThreatEntities) (match &self (Inheritance $name ThreatEntity) $name))
 (= (getDefenseTechnologies) (match &self (Inheritance $name DefenseTechnology) $name))
 (= (getAttackVectors) (match &self (Inheritance $name AttackVector) $name))
