@@ -3,7 +3,7 @@ echo Starting the Cybersecurity Knowledge Chatbot...
 
 REM Start the FastAPI backend server
 echo Starting FastAPI Backend...
-start cmd /k "python -m uvicorn app:app --host 0.0.0.0 --port 8006 --reload"
+start cmd /k "python -m uvicorn api:app --host 0.0.0.0 --port 8006 --reload"
 
 REM Wait a moment for backend to initialize
 timeout /t 3

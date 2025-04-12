@@ -1,4 +1,4 @@
-; Base queries
+
 (= (getThreatEntities) (match &self (Inheritance $name ThreatEntity) $name))
 (= (getDefenseTechnologies) (match &self (Inheritance $name DefenseTechnology) $name))
 (= (getAttackVectors) (match &self (Inheritance $name AttackVector) $name))
@@ -7,7 +7,7 @@
 (= (getEndpointSecurityTools) (match &self (Inheritance $name EndpointSecurity) $name))
 (= (getSecurityMonitoringTools) (match &self (Inheritance $name SecurityMonitoring) $name))
 
-; Relationship queries
+
 (= (getThreatMitigations $threat)
    (match &self (MitigatedBy $threat $defense) $defense))
 
